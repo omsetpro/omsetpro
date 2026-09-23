@@ -38,7 +38,7 @@ export function TransactionStatus({ state }: { state: TransactionState }) {
   const hash = "hash" in state ? state.hash : undefined;
 
   return (
-    <section className={`transaction-status ${failed ? "transaction-status-error" : ""}`} aria-live="polite" aria-busy={pending}>
+    <section className={`transaction-status transaction-status-${state.stage} ${failed ? "transaction-status-error" : ""}`} aria-live="polite" aria-busy={pending}>
       {pending ? <LoaderCircle className="spin" aria-hidden="true" size={20} /> : failed ? <CircleAlert aria-hidden="true" size={20} /> : <CircleCheck aria-hidden="true" size={20} />}
       <div>
         <strong>{labels[state.stage]}</strong>

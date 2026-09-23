@@ -280,12 +280,24 @@ export function AgreementLifecycleActions({
         <h2 id="lifecycle-action-title">{config.title}</h2>
         <p>{config.description}</p>
         {action === "fund" && (
-          <>
-            <p>Agreement amount / escrow: {formatEther(agreement.depositAmount)} USDC</p>
-            <p>OmsetPro fee (1%): {fundingRequired.isSuccess ? `${formatEther(fundingRequired.data - agreement.depositAmount)} USDC` : fundingRequired.isError ? "Contract read failed" : "Loading…"}</p>
-            <p>Total funding required: {fundingRequired.isSuccess ? `${formatEther(fundingRequired.data)} USDC` : fundingRequired.isError ? "Contract read failed" : "Loading…"}</p>
-            <p className="action-balance">Live wallet balance: {balance.isSuccess ? `${formatEther(balance.data.value)} USDC` : balance.isError ? "RPC read failed" : "Loading…"}</p>
-          </>
+          <dl className="funding-summary">
+            <div>
+              <dt>Agreement amount / escrow</dt>
+              <dd>{formatEther(agreement.depositAmount)} USDC</dd>
+            </div>
+            <div>
+              <dt>OmsetPro fee <span>1%</span></dt>
+              <dd>{fundingRequired.isSuccess ? `${formatEther(fundingRequired.data - agreement.depositAmount)} USDC` : fundingRequired.isError ? "Contract read failed" : "Loading…"}</dd>
+            </div>
+            <div className="funding-total">
+              <dt>Total funding required</dt>
+              <dd>{fundingRequired.isSuccess ? `${formatEther(fundingRequired.data)} USDC` : fundingRequired.isError ? "Contract read failed" : "Loading…"}</dd>
+            </div>
+            <div className="funding-wallet">
+              <dt>Live wallet balance</dt>
+              <dd>{balance.isSuccess ? `${formatEther(balance.data.value)} USDC` : balance.isError ? "RPC read failed" : "Loading…"}</dd>
+            </div>
+          </dl>
         )}
         {action === "handover" && (
           <label className="action-confirmation">

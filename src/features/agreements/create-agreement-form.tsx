@@ -593,11 +593,11 @@ export function CreateAgreementForm() {
         <section className="agreement-form-sheet" aria-labelledby="create-title">
           <div className="form-heading">
             <div>
-              <p className="eyebrow">New onchain record</p>
-              <h1 id="create-title">Create an agreement</h1>
+              <p className="eyebrow">New asset financing record</p>
+              <h1 id="create-title">Structure an agreement</h1>
               <p>
-                Define the people, item, deposit, and deadlines. Your wallet will
-                show the final contract request before anything is sent.
+                Define the physical asset, counterparties, native-USDC collateral,
+                and settlement deadlines. Review everything before signing.
               </p>
             </div>
             <span className="form-step">01 / Create</span>
@@ -638,10 +638,10 @@ export function CreateAgreementForm() {
 
           <form className="agreement-form" noValidate onSubmit={(event) => void handleSubmit(event)}>
             <fieldset disabled={isPending}>
-              <legend>Item and participants</legend>
+              <legend>Asset and participants</legend>
               <div className="form-field">
-                <label htmlFor="itemName">Item name</label>
-                <p id="itemName-help">Use a clear name both people will recognize.</p>
+                <label htmlFor="itemName">Physical asset</label>
+                <p id="itemName-help">Use a clear description both counterparties will recognize.</p>
                 <input
                   id="itemName"
                   type="text"
@@ -705,10 +705,10 @@ export function CreateAgreementForm() {
             </fieldset>
 
             <fieldset disabled={isPending}>
-              <legend>Deposit and timing</legend>
+              <legend>Collateral and settlement timing</legend>
               <div className="form-field">
-                <label htmlFor="depositAmount">Security deposit</label>
-                <p id="depositAmount-help">USDC amount recorded now and funded by the borrower later.</p>
+                <label htmlFor="depositAmount">Agreement collateral</label>
+                <p id="depositAmount-help">Native USDC principal recorded now and funded by the borrower later.</p>
                 <div className="input-suffix">
                   <input
                     id="depositAmount"
@@ -819,7 +819,7 @@ export function CreateAgreementForm() {
             <li><span>3</span><div><strong>Confirm</strong><p>Your wallet submits only after your explicit approval.</p></div></li>
           </ol>
           <div className="receipt-rule" />
-          <p className="receipt-note">No deposit is transferred during creation. The recorded borrower funds it later through the live agreement.</p>
+          <p className="receipt-note">No USDC is transferred during creation. The recorded borrower funds the collateral and protocol fee later from the live agreement.</p>
         </aside>
       </div>
     </main>

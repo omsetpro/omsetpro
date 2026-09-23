@@ -97,7 +97,7 @@ export function AgreementDiscovery() {
         <div>
           <p className="eyebrow">No agreements found</p>
           <h2>This wallet has no OmsetPro roles yet.</h2>
-          <p>Create an agreement or ask an owner to use this address as borrower or arbiter.</p>
+          <p>Create an asset agreement or ask a counterparty to assign this address a role.</p>
         </div>
       </section>
     );
@@ -107,9 +107,9 @@ export function AgreementDiscovery() {
     <section className="agreement-discovery" aria-labelledby="agreements-title">
       <div className="discovery-heading">
         <div>
-          <p className="eyebrow">Role-based discovery</p>
-          <h2 id="agreements-title">Your agreements</h2>
-          <p>Live records where this wallet is an owner, borrower, or arbiter.</p>
+          <p className="eyebrow">Onchain portfolio</p>
+          <h2 id="agreements-title">Your asset agreements</h2>
+          <p>Live financing records where this wallet is an owner, borrower, or arbiter.</p>
         </div>
         <StatusBadge tone="positive">{discovery.data.length.toString()} found</StatusBadge>
       </div>

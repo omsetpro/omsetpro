@@ -35,7 +35,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         supportedChains: [arcMainnet],
         defaultChain: arcMainnet,
         appearance: {
-          theme: "#f7f1e5",
+          theme: "#0a0701",
           accentColor: "#2f6758",
           landingHeader: "Welcome to OmsetPro",
           loginMessage: "Sign in to manage item loans and security deposits.",

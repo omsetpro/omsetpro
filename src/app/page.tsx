@@ -16,23 +16,23 @@ const steps = [
   {
     number: "01",
     icon: Handshake,
-    title: "Agree on the loan",
+    title: "Structure the agreement",
     description:
-      "The owner, borrower, and neutral arbiter are named in one onchain agreement.",
+      "Record the asset, counterparties, collateral amount, deadlines, and neutral arbiter onchain.",
   },
   {
     number: "02",
     icon: KeyRound,
-    title: "Lock the deposit",
+    title: "Fund in native USDC",
     description:
-      "The borrower funds the security deposit. It stays in the contract, not with the owner.",
+      "The borrower funds the escrow and protocol fee in one transaction on Arc Mainnet.",
   },
   {
     number: "03",
     icon: RotateCcw,
-    title: "Return and settle",
+    title: "Settle with clarity",
     description:
-      "A successful return releases the deposit. A neutral arbiter only steps in for disputes.",
+      "Return, refund, claim, and dispute paths distribute only the recorded collateral amount.",
   },
 ];
 
@@ -44,17 +44,16 @@ export default function Home() {
       <main>
         <section className="hero site-shell">
           <div className="hero-copy">
-            <p className="eyebrow">A safer way to lend everyday things</p>
-            <h1>Lend things without awkward trust.</h1>
+            <p className="eyebrow">Physical-asset financing · Arc Mainnet</p>
+            <h1>Finance real assets with transparent USDC collateral.</h1>
             <p className="hero-lede">
-              OmsetPro protects everyday item loans with an onchain security
-              deposit. The owner never holds the borrower&apos;s deposit. The
-              borrower can recover it after the return is confirmed, or once the
-              inspection window closes without a claim.
+              OmsetPro gives asset owners and borrowers a clear onchain agreement,
+              native-USDC escrow, defined deadlines, and deterministic settlement
+              rules—without asking either party to custody the other&apos;s collateral.
             </p>
             <div className="hero-actions">
               <Link className="button button-primary button-large" href="/dashboard">
-                Open dashboard
+                Explore agreements
                 <ArrowRight aria-hidden="true" size={18} />
               </Link>
               <a
@@ -70,41 +69,41 @@ export default function Home() {
             <div className="plain-language-note">
               <ShieldCheck aria-hidden="true" size={20} />
               <p>
-                The contract follows the agreed rules automatically. No one can
-                quietly move the deposit outside the loan lifecycle.
+                Principal remains isolated from the 1% protocol fee, and every
+                lifecycle action is visible onchain.
               </p>
             </div>
           </div>
 
-          <div className="checkout-card" aria-label="How a OmsetPro loan works">
+          <div className="checkout-card" aria-label="How an OmsetPro financing agreement works">
             <div className="checkout-card-top">
               <span>OMSETPRO</span>
-              <span>LOAN CHECKOUT</span>
+              <span>FINANCING OVERVIEW</span>
             </div>
             <div className="checkout-title-row">
               <div>
-                <span className="field-label">Record type</span>
-                <strong>Item loan</strong>
+                <span className="field-label">Agreement type</span>
+                <strong>Physical asset</strong>
               </div>
               <span className="checkout-stamp">PROTECTED</span>
             </div>
             <div className="checkout-lines">
               <div>
-                <span>Deposit holder</span>
-                <strong>Onchain contract</strong>
+                <span>Collateral</span>
+                <strong>Native USDC escrow</strong>
               </div>
               <div>
                 <span>Network</span>
                 <strong>Arc Mainnet</strong>
               </div>
               <div>
-                <span>Settlement</span>
-                <strong>Return or resolve</strong>
+                <span>Protocol fee</span>
+                <strong>1% at funding</strong>
               </div>
             </div>
             <div className="checkout-footer">
               <Check aria-hidden="true" size={18} />
-              <span>Clear roles. Clear deadlines. One deposit.</span>
+              <span>Verifiable roles, deadlines, and settlement.</span>
             </div>
           </div>
         </section>
@@ -113,12 +112,12 @@ export default function Home() {
           <div className="site-shell">
             <div className="section-heading">
               <div>
-                <p className="eyebrow">The practical flow</p>
-                <h2 id="process-title">A loan that leaves a clear receipt.</h2>
+                <p className="eyebrow">How OmsetPro works</p>
+                <h2 id="process-title">From asset terms to final settlement.</h2>
               </div>
               <p>
-                OmsetPro makes the deposit rules visible before anyone hands
-                over an item.
+                Every participant can review the same funding and settlement
+                rules before the physical asset changes hands.
               </p>
             </div>
             <ol className="process-list">
@@ -139,12 +138,12 @@ export default function Home() {
 
         <section className="proof-section site-shell" aria-labelledby="proof-title">
           <div>
-            <p className="eyebrow">Open by design</p>
-            <h2 id="proof-title">The deposit rules are public.</h2>
+            <p className="eyebrow">Verifiable infrastructure</p>
+            <h2 id="proof-title">Built for accountable transactions.</h2>
           </div>
           <p>
-            OmsetPro runs on Arc Mainnet. Anyone can inspect the verified
-            contract and confirm the code behind the agreement lifecycle.
+            OmsetPro runs on Arc Mainnet. Review the deployed contract, track
+            transactions, and verify the agreement lifecycle directly.
           </p>
           <a
             className="button button-secondary"
@@ -152,7 +151,7 @@ export default function Home() {
             target="_blank"
             rel="noreferrer"
           >
-            MonadVision record
+            View contract on explorer
             <ArrowUpRight aria-hidden="true" size={16} />
           </a>
         </section>
@@ -161,7 +160,7 @@ export default function Home() {
       <footer className="site-footer">
         <div className="site-shell">
           <span>OmsetPro</span>
-          <span>Built for careful lending on Arc Mainnet.</span>
+          <span>Physical-asset financing with native USDC on Arc Mainnet.</span>
         </div>
       </footer>
     </div>

@@ -15,11 +15,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "OmsetPro  Safer everyday item loans",
-    template: "%s  OmsetPro",
+    default: "OmsetPro | Physical-asset financing on Arc",
+    template: "%s | OmsetPro",
   },
   description:
-    "Protect everyday item loans with a clear onchain security deposit on Arc Mainnet.",
+    "USDC-backed agreements for physical assets, with transparent escrow and settlement on Arc Mainnet.",
 };
 
 export default function RootLayout({

@@ -165,7 +165,7 @@ export function WalletDashboard() {
         <div className="panel-heading">
           <div>
             <p className="eyebrow">Live wallet state</p>
-            <h1 id="wallet-title">Your lending wallet</h1>
+            <h1 id="wallet-title">Financing workspace</h1>
           </div>
           <StatusBadge tone={stateTone(state)}>{stateLabel(state)}</StatusBadge>
         </div>
@@ -241,8 +241,8 @@ export function WalletDashboard() {
         {walletAddress && (
           <div className="dashboard-create-action">
             <div>
-              <strong>Ready to lend an item?</strong>
-              <p>Create the owner, borrower, arbiter, deposit, and deadline record onchain.</p>
+              <strong>Structure a new asset agreement</strong>
+              <p>Define participants, collateral, deadlines, and arbitration terms onchain.</p>
             </div>
             <Link className="button button-primary" href="/create">
               <Plus aria-hidden="true" size={17} />
@@ -325,8 +325,8 @@ export function WalletDashboard() {
           <ArrowUpRight aria-hidden="true" size={16} />
         </a>
         <p className="slip-note">
-          Discover every live agreement tied to your wallet and complete its
-          role-authorized lifecycle—from deposit funding and handover through
+          Discover every agreement tied to your wallet and complete its
+          role-authorized lifecycle—from collateral funding and handover through
           returns, refunds, claims, disputes, and arbiter resolution.
         </p>
       </aside>
