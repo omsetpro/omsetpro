@@ -57,6 +57,40 @@ contract ReentrantParticipant {
     }
 }
 
+contract FeeRecipientProbe {
+    OmsetPro public target;
+    bytes private _reentryCall;
+    bool public rejectTransfers;
+    bool public reentryAttempted;
+    bool public reentrySucceeded;
+    bytes4 public reentryError;
+
+    function configure(OmsetPro target_, bytes calldata reentryCall_) external {
+        target = target_;
+        _reentryCall = reentryCall_;
+    }
+
+    function setRejectTransfers(bool reject) external {
+        rejectTransfers = reject;
+    }
+
+    receive() external payable {
+        if (rejectTransfers) revert();
+        if (address(target) != address(0) && !reentryAttempted) {
+            reentryAttempted = true;
+            bytes memory returnData;
+            (reentrySucceeded, returnData) = address(target).call(_reentryCall);
+            if (returnData.length >= 4) {
+                bytes4 selector;
+                assembly ("memory-safe") {
+                    selector := mload(add(returnData, 0x20))
+                }
+                reentryError = selector;
+            }
+        }
+    }
+}
+
 contract OmsetProTest is Test {
     OmsetPro private omsetPro;
 
@@ -64,6 +98,7 @@ contract OmsetProTest is Test {
     address private constant BORROWER = address(0xB0B);
     address private constant ARBITER = address(0xA4B17E4);
     address private constant OUTSIDER = address(0xBAD);
+    address private constant FEE_RECIPIENT = address(0xFEE);
 
     uint256 private constant DEPOSIT = 10 ether;
     uint64 private constant INSPECTION_PERIOD = 2 days;
@@ -88,6 +123,9 @@ contract OmsetProTest is Test {
     );
     event AgreementFunded(
         uint256 indexed agreementId, address indexed borrower, uint256 amount, uint64 fundingTimestamp
+    );
+    event ProtocolFeeCollected(
+        uint256 indexed agreementId, address indexed payer, address indexed feeRecipient, uint256 feeAmount
     );
     event HandoverConfirmed(uint256 indexed agreementId, address indexed owner, uint64 handoverTimestamp);
     event ReturnRequested(
@@ -134,11 +172,25 @@ contract OmsetProTest is Test {
 
     function setUp() external {
         vm.warp(1_000_000);
-        omsetPro = new OmsetPro();
+        omsetPro = new OmsetPro(FEE_RECIPIENT);
         handoverDeadline = uint64(block.timestamp + 1 days);
         returnDeadline = uint64(block.timestamp + 7 days);
         vm.deal(OWNER, 1_000 ether);
         vm.deal(BORROWER, 1_000 ether);
+    }
+
+    function testConstructorStoresFeeRecipientAndRejectsZeroAddress() external {
+        assertEq(omsetPro.feeRecipient(), FEE_RECIPIENT);
+        vm.expectRevert(OmsetPro.ZeroAddress.selector);
+        new OmsetPro(address(0));
+    }
+
+    function testProtocolFeeHelpers() external view {
+        assertEq(omsetPro.PROTOCOL_FEE_BPS(), 100);
+        assertEq(omsetPro.BPS_DENOMINATOR(), 10_000);
+        assertEq(omsetPro.protocolFeeFor(100 ether), 1 ether);
+        assertEq(omsetPro.totalFundingRequired(100 ether), 101 ether);
+        assertEq(omsetPro.protocolFeeFor(1), 0);
     }
 
     function testCreateAgreementStoresDataEmitsEventAndIndexesRoles() external {
@@ -377,16 +429,21 @@ contract OmsetProTest is Test {
         omsetPro.cancelAgreement(agreementId);
     }
 
-    function testBorrowerFundsExactDepositOnce() external {
+    function testBorrowerFundsDepositPlusFeeOnce() external {
         uint256 agreementId = _createAgreement();
+        uint256 fee = omsetPro.protocolFeeFor(DEPOSIT);
+        uint256 feeRecipientBefore = FEE_RECIPIENT.balance;
         vm.expectEmit(true, true, false, true);
         emit AgreementFunded(agreementId, BORROWER, DEPOSIT, uint64(block.timestamp));
+        vm.expectEmit(true, true, true, true);
+        emit ProtocolFeeCollected(agreementId, BORROWER, FEE_RECIPIENT, fee);
         _fund(agreementId, DEPOSIT, BORROWER);
 
         OmsetPro.Agreement memory agreement = omsetPro.getAgreement(agreementId);
         assertEq(uint256(agreement.status), uint256(OmsetPro.Status.Funded));
         assertEq(agreement.fundingTimestamp, block.timestamp);
         assertEq(address(omsetPro).balance, DEPOSIT);
+        assertEq(FEE_RECIPIENT.balance - feeRecipientBefore, fee);
 
         _expectStatus(agreementId, OmsetPro.Status.Created, OmsetPro.Status.Funded);
         _fund(agreementId, DEPOSIT, BORROWER);
@@ -428,13 +485,80 @@ contract OmsetProTest is Test {
 
     function testFundingRejectsWrongRoleAndIncorrectAmounts() external {
         uint256 agreementId = _createAgreement();
+        uint256 total = omsetPro.totalFundingRequired(DEPOSIT);
         _expectUnauthorized(agreementId, OWNER);
         _fund(agreementId, DEPOSIT, OWNER);
 
-        vm.expectRevert(abi.encodeWithSelector(OmsetPro.IncorrectDeposit.selector, DEPOSIT, DEPOSIT - 1));
-        _fund(agreementId, DEPOSIT - 1, BORROWER);
-        vm.expectRevert(abi.encodeWithSelector(OmsetPro.IncorrectDeposit.selector, DEPOSIT, DEPOSIT + 1));
-        _fund(agreementId, DEPOSIT + 1, BORROWER);
+        vm.expectRevert(abi.encodeWithSelector(OmsetPro.IncorrectDeposit.selector, total, DEPOSIT));
+        _fundValue(agreementId, DEPOSIT, BORROWER);
+        vm.expectRevert(abi.encodeWithSelector(OmsetPro.IncorrectDeposit.selector, total, total - 1));
+        _fundValue(agreementId, total - 1, BORROWER);
+        vm.expectRevert(abi.encodeWithSelector(OmsetPro.IncorrectDeposit.selector, total, total + 1));
+        _fundValue(agreementId, total + 1, BORROWER);
+        _assertStatus(agreementId, OmsetPro.Status.Created);
+        assertEq(FEE_RECIPIENT.balance, 0);
+    }
+
+    function testRejectedFeeTransferRevertsFundingAndPreservesBalances() external {
+        FeeRecipientProbe recipient = new FeeRecipientProbe();
+        recipient.setRejectTransfers(true);
+        OmsetPro contractWithRecipient = new OmsetPro(address(recipient));
+        omsetPro = contractWithRecipient;
+        uint256 agreementId = _createAgreement();
+        uint256 total = omsetPro.totalFundingRequired(DEPOSIT);
+        uint256 borrowerBefore = BORROWER.balance;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(OmsetPro.NativeTransferFailed.selector, address(recipient), total - DEPOSIT)
+        );
+        _fundValue(agreementId, total, BORROWER);
+
+        _assertStatus(agreementId, OmsetPro.Status.Created);
+        assertEq(omsetPro.getAgreement(agreementId).fundingTimestamp, 0);
+        assertEq(address(omsetPro).balance, 0);
+        assertEq(address(recipient).balance, 0);
+        assertEq(BORROWER.balance, borrowerBefore);
+    }
+
+    function testFeeRecipientCannotReenterFunding() external {
+        FeeRecipientProbe recipient = new FeeRecipientProbe();
+        omsetPro = new OmsetPro(address(recipient));
+        uint256 agreementId = _createAgreement();
+        recipient.configure(omsetPro, abi.encodeCall(OmsetPro.fundAgreement, (agreementId)));
+
+        _fund(agreementId, DEPOSIT, BORROWER);
+
+        assertTrue(recipient.reentryAttempted());
+        assertFalse(recipient.reentrySucceeded());
+        assertEq(recipient.reentryError(), ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
+        assertEq(address(recipient).balance, omsetPro.protocolFeeFor(DEPOSIT));
+        assertEq(address(omsetPro).balance, DEPOSIT);
+        _assertStatus(agreementId, OmsetPro.Status.Funded);
+    }
+
+    function testFeeRecipientOwnerCannotConfirmHandoverDuringFunding() external {
+        FeeRecipientProbe recipient = new FeeRecipientProbe();
+        omsetPro = new OmsetPro(address(recipient));
+        vm.prank(address(recipient));
+        uint256 agreementId = omsetPro.createAgreement(
+            BORROWER,
+            ARBITER,
+            ITEM_NAME,
+            ITEM_METADATA_URI,
+            DEPOSIT,
+            handoverDeadline,
+            returnDeadline,
+            INSPECTION_PERIOD,
+            CLAIM_RESPONSE_PERIOD
+        );
+        recipient.configure(omsetPro, abi.encodeCall(OmsetPro.confirmHandover, (agreementId)));
+
+        _fund(agreementId, DEPOSIT, BORROWER);
+
+        assertTrue(recipient.reentryAttempted());
+        assertFalse(recipient.reentrySucceeded());
+        assertEq(recipient.reentryError(), ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
+        _assertStatus(agreementId, OmsetPro.Status.Funded);
     }
 
     function testOwnerConfirmsHandoverBeforeDeadline() external {
@@ -830,7 +954,7 @@ contract OmsetProTest is Test {
     function testFuzzDisputePayoutConservation(uint96 rawDeposit, uint96 rawAward) external {
         uint256 deposit = bound(uint256(rawDeposit), 1, 1_000 ether);
         uint256 award = bound(uint256(rawAward), 0, deposit);
-        vm.deal(BORROWER, deposit);
+        vm.deal(BORROWER, omsetPro.totalFundingRequired(deposit));
         uint256 agreementId = _createAgreementWith(BORROWER, deposit);
         _fund(agreementId, deposit, BORROWER);
         vm.prank(OWNER);
@@ -853,17 +977,19 @@ contract OmsetProTest is Test {
         assertEq(address(omsetPro).balance, 0);
     }
 
-    function testFuzzExactDepositEnforcement(uint96 rawDeposit, uint96 rawPayment) external {
+    function testFuzzExactTotalFundingEnforcement(uint96 rawDeposit, uint96 rawPayment) external {
         uint256 deposit = bound(uint256(rawDeposit), 1, 1_000 ether);
         uint256 payment = bound(uint256(rawPayment), 0, 1_001 ether);
+        uint256 total = omsetPro.totalFundingRequired(deposit);
         vm.deal(BORROWER, payment);
         uint256 agreementId = _createAgreementWith(BORROWER, deposit);
-        if (payment == deposit) {
-            _fund(agreementId, payment, BORROWER);
+        if (payment == total) {
+            _fundValue(agreementId, payment, BORROWER);
             _assertStatus(agreementId, OmsetPro.Status.Funded);
+            assertEq(address(omsetPro).balance, deposit);
         } else {
-            vm.expectRevert(abi.encodeWithSelector(OmsetPro.IncorrectDeposit.selector, deposit, payment));
-            _fund(agreementId, payment, BORROWER);
+            vm.expectRevert(abi.encodeWithSelector(OmsetPro.IncorrectDeposit.selector, total, payment));
+            _fundValue(agreementId, payment, BORROWER);
             _assertStatus(agreementId, OmsetPro.Status.Created);
         }
     }
@@ -921,9 +1047,10 @@ contract OmsetProTest is Test {
     }
 
     function _fundedAgreementWithBorrower(address borrower) private returns (uint256 agreementId) {
-        vm.deal(borrower, DEPOSIT);
+        uint256 total = omsetPro.totalFundingRequired(DEPOSIT);
+        vm.deal(borrower, total);
         agreementId = _createAgreementWith(borrower, DEPOSIT);
-        ReentrantParticipant(payable(borrower)).execute{value: DEPOSIT}(
+        ReentrantParticipant(payable(borrower)).execute{value: total}(
             abi.encodeCall(OmsetPro.fundAgreement, (agreementId))
         );
     }
@@ -973,7 +1100,11 @@ contract OmsetProTest is Test {
         omsetPro.disputeClaim(agreementId);
     }
 
-    function _fund(uint256 agreementId, uint256 amount, address borrower) private {
+    function _fund(uint256 agreementId, uint256 deposit, address borrower) private {
+        _fundValue(agreementId, deposit + (deposit * 100) / 10_000, borrower);
+    }
+
+    function _fundValue(uint256 agreementId, uint256 amount, address borrower) private {
         vm.prank(borrower);
         omsetPro.fundAgreement{value: amount}(agreementId);
     }

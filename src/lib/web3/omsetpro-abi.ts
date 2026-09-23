@@ -1,5 +1,45 @@
 export const omsetProAbi = [
   {
+    type: "constructor",
+    inputs: [{ name: "feeRecipient_", type: "address" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "PROTOCOL_FEE_BPS",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "BPS_DENOMINATOR",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "feeRecipient",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "protocolFeeFor",
+    stateMutability: "pure",
+    inputs: [{ name: "amount", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "totalFundingRequired",
+    stateMutability: "pure",
+    inputs: [{ name: "amount", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
     type: "function",
     name: "createAgreement",
     stateMutability: "nonpayable",
@@ -196,6 +236,17 @@ export const omsetProAbi = [
       { name: "borrower", type: "address", indexed: true },
       { name: "amount", type: "uint256", indexed: false },
       { name: "fundingTimestamp", type: "uint64", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "ProtocolFeeCollected",
+    anonymous: false,
+    inputs: [
+      { name: "agreementId", type: "uint256", indexed: true },
+      { name: "payer", type: "address", indexed: true },
+      { name: "feeRecipient", type: "address", indexed: true },
+      { name: "feeAmount", type: "uint256", indexed: false },
     ],
   },
   {

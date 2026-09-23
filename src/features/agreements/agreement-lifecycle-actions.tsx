@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CircleAlert, HandCoins, PackageCheck, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { formatEther, type Hash } from "viem";
-import { useBalance, useBlock, usePublicClient } from "wagmi";
+import { useBalance, useBlock, usePublicClient, useReadContract } from "wagmi";
 import { arcMainnet } from "@/config/arc-mainnet";
 import {
   isTransactionPending,
@@ -23,7 +23,7 @@ const ACTION_CONFIG = {
   fund: {
     title: "Fund the security deposit",
     button: "Fund agreement",
-    description: "The exact deposit is sent to the OmsetPro contract, not directly to the owner.",
+    description: "Fund the agreement escrow and pay the 1% OmsetPro fee in one transaction.",
     expectedAfter: 1,
     Icon: HandCoins,
   },
@@ -62,6 +62,13 @@ export function AgreementLifecycleActions({
     address: wallet.address,
     chainId: arcMainnet.id,
     query: { enabled: Boolean(wallet.address) && wallet.chainId === arcMainnet.id },
+  });
+  const fundingRequired = useReadContract({
+    ...omsetProContract,
+    functionName: "totalFundingRequired",
+    args: [agreement.depositAmount],
+    chainId: arcMainnet.id,
+    query: { enabled: agreement.status === 0 },
   });
   const [transaction, setTransaction] = useState<TransactionState>({ stage: "idle" });
   const [transactionAction, setTransactionAction] =
@@ -115,7 +122,7 @@ export function AgreementLifecycleActions({
 
   const config = ACTION_CONFIG[action];
   const pending = isTransactionPending(transaction);
-  const disabled = pending || (action === "handover" && !handoverConfirmed);
+  const disabled = pending || (action === "handover" && !handoverConfirmed) || (action === "fund" && !fundingRequired.isSuccess);
 
   async function executeAction() {
     if (!action || pending) return;
@@ -138,15 +145,21 @@ export function AgreementLifecycleActions({
     if (action === "handover" && !handoverConfirmed) return;
 
     let submitTransaction: (() => Promise<Hash>) | undefined;
+    let fundingTotal: bigint | undefined;
     try {
       if (action === "fund") {
+        fundingTotal = await publicClient.readContract({
+          ...omsetProContract,
+          functionName: "totalFundingRequired",
+          args: [agreement.depositAmount],
+        });
         const simulation = await publicClient.simulateContract({
             account: writeAddress,
             address: omsetProContract.address,
             abi: omsetProContract.abi,
             functionName: "fundAgreement",
             args: [agreement.id],
-            value: agreement.depositAmount,
+            value: fundingTotal,
           });
         submitTransaction = () => walletClient.writeContract(simulation.request);
       } else if (action === "handover") {
@@ -169,7 +182,7 @@ export function AgreementLifecycleActions({
         submitTransaction = () => walletClient.writeContract(simulation.request);
       }
 
-      if (action === "fund") {
+      if (action === "fund" && fundingTotal !== undefined) {
         setTransaction({ stage: "estimating" });
         const [gas, gasPrice, liveBalance] = await Promise.all([
           publicClient.estimateContractGas({
@@ -178,16 +191,16 @@ export function AgreementLifecycleActions({
             abi: omsetProContract.abi,
             functionName: "fundAgreement",
             args: [agreement.id],
-            value: agreement.depositAmount,
+            value: fundingTotal,
           }),
           publicClient.getGasPrice(),
           publicClient.getBalance({ address: writeAddress }),
         ]);
-        const required = agreement.depositAmount + gas * gasPrice;
+        const required = fundingTotal + gas * gasPrice;
         if (liveBalance < required) {
           setTransaction({
             stage: "simulation-error",
-            message: `This wallet needs at least ${formatEther(required)} USDC for the exact deposit and current estimated gas, but has ${formatEther(liveBalance)} USDC.`,
+            message: `This wallet needs at least ${formatEther(required)} USDC for the agreement amount, 1% fee, and current estimated gas, but has ${formatEther(liveBalance)} USDC.`,
           });
           return;
         }
@@ -267,7 +280,12 @@ export function AgreementLifecycleActions({
         <h2 id="lifecycle-action-title">{config.title}</h2>
         <p>{config.description}</p>
         {action === "fund" && (
-          <p className="action-balance">Live wallet balance: {balance.isSuccess ? `${formatEther(balance.data.value)} USDC` : balance.isError ? "RPC read failed" : "Loading…"}</p>
+          <>
+            <p>Agreement amount / escrow: {formatEther(agreement.depositAmount)} USDC</p>
+            <p>OmsetPro fee (1%): {fundingRequired.isSuccess ? `${formatEther(fundingRequired.data - agreement.depositAmount)} USDC` : fundingRequired.isError ? "Contract read failed" : "Loading…"}</p>
+            <p>Total funding required: {fundingRequired.isSuccess ? `${formatEther(fundingRequired.data)} USDC` : fundingRequired.isError ? "Contract read failed" : "Loading…"}</p>
+            <p className="action-balance">Live wallet balance: {balance.isSuccess ? `${formatEther(balance.data.value)} USDC` : balance.isError ? "RPC read failed" : "Loading…"}</p>
+          </>
         )}
         {action === "handover" && (
           <label className="action-confirmation">

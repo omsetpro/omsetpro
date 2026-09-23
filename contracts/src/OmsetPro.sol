@@ -6,6 +6,10 @@ import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/Reentrancy
 /// @title OmsetPro
 /// @notice Escrows native USDC deposits for peer-to-peer physical item lending agreements.
 contract OmsetPro is ReentrancyGuard {
+    uint256 public constant PROTOCOL_FEE_BPS = 100;
+    uint256 public constant BPS_DENOMINATOR = 10_000;
+    address public immutable feeRecipient;
+
     enum Status {
         Created,
         Funded,
@@ -74,6 +78,9 @@ contract OmsetPro is ReentrancyGuard {
     event AgreementFunded(
         uint256 indexed agreementId, address indexed borrower, uint256 amount, uint64 fundingTimestamp
     );
+    event ProtocolFeeCollected(
+        uint256 indexed agreementId, address indexed payer, address indexed feeRecipient, uint256 feeAmount
+    );
     event HandoverConfirmed(uint256 indexed agreementId, address indexed owner, uint64 handoverTimestamp);
     event ReturnRequested(
         uint256 indexed agreementId, address indexed borrower, string returnProofURI, uint64 returnRequestTimestamp
@@ -122,6 +129,19 @@ contract OmsetPro is ReentrancyGuard {
     mapping(address account => uint256[] agreementIds) private _ownerAgreementIds;
     mapping(address account => uint256[] agreementIds) private _borrowerAgreementIds;
     mapping(address account => uint256[] agreementIds) private _arbiterAgreementIds;
+
+    constructor(address feeRecipient_) {
+        if (feeRecipient_ == address(0)) revert ZeroAddress();
+        feeRecipient = feeRecipient_;
+    }
+
+    function protocolFeeFor(uint256 amount) public pure returns (uint256) {
+        return (amount * PROTOCOL_FEE_BPS) / BPS_DENOMINATOR;
+    }
+
+    function totalFundingRequired(uint256 amount) public pure returns (uint256) {
+        return amount + protocolFeeFor(amount);
+    }
 
     function createAgreement(
         address borrower,
@@ -176,22 +196,26 @@ contract OmsetPro is ReentrancyGuard {
         emit AgreementCancelled(agreementId, agreement.owner, msg.sender, false);
     }
 
-    function fundAgreement(uint256 agreementId) external payable {
+    function fundAgreement(uint256 agreementId) external payable nonReentrant {
         Agreement storage agreement = _agreement(agreementId);
         _requireRole(agreementId, msg.sender, agreement.borrower);
         _requireStatus(agreement, Status.Created);
         if (_deadlineReached(agreement.handoverDeadline)) {
             revert DeadlineExpired(agreementId, agreement.handoverDeadline);
         }
-        if (msg.value != agreement.depositAmount) revert IncorrectDeposit(agreement.depositAmount, msg.value);
+        uint256 fee = protocolFeeFor(agreement.depositAmount);
+        uint256 total = agreement.depositAmount + fee;
+        if (msg.value != total) revert IncorrectDeposit(total, msg.value);
 
         uint64 timestamp = _timestamp();
         agreement.status = Status.Funded;
         agreement.fundingTimestamp = timestamp;
-        emit AgreementFunded(agreementId, msg.sender, msg.value, timestamp);
+        if (fee != 0) _sendNative(feeRecipient, fee);
+        emit AgreementFunded(agreementId, msg.sender, agreement.depositAmount, timestamp);
+        if (fee != 0) emit ProtocolFeeCollected(agreementId, msg.sender, feeRecipient, fee);
     }
 
-    function confirmHandover(uint256 agreementId) external {
+    function confirmHandover(uint256 agreementId) external nonReentrant {
         Agreement storage agreement = _agreement(agreementId);
         _requireRole(agreementId, msg.sender, agreement.owner);
         _requireStatus(agreement, Status.Funded);
