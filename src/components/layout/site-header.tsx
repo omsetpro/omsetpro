@@ -12,6 +12,7 @@ export function SiteHeader({ actions }: { actions: ReactNode }) {
             <Link href="/">Overview</Link>
             <Link href="/dashboard">Dashboard</Link>
             <Link href="/create">Create</Link>
+            <Link href="/bridge">Bridge</Link>
           </nav>
           <div className="account-actions">{actions}</div>
         </div>

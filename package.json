@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@circle-fin/adapter-viem-v2": "^1.18.0",
+    "@circle-fin/bridge-kit": "^1.15.1",
     "@hookform/resolvers": "^5.4.0",
     "@privy-io/react-auth": "^3.35.0",
     "@privy-io/wagmi": "^4.0.14",

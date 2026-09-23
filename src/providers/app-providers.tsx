@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { publicEnv } from "@/config/env";
 import { arcMainnet } from "@/config/arc-mainnet";
 import { wagmiConfig } from "@/config/wagmi";
+import { circleViemMainnetChains } from "@/features/bridge/circle-bridge";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -32,7 +33,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
             createOnLogin: "users-without-wallets",
           },
         },
-        supportedChains: [arcMainnet],
+        supportedChains: circleViemMainnetChains,
         defaultChain: arcMainnet,
         appearance: {
           theme: "#0a0701",
@@ -41,7 +42,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
           loginMessage: "Sign in to manage item loans and security deposits.",
           showWalletLoginFirst: false,
           walletChainType: "ethereum-only",
-          walletList: ["detected_wallets", "wallet_connect"],
+          walletList: [
+            "rabby_wallet",
+            "detected_ethereum_wallets",
+            "wallet_connect",
+          ],
         },
       }}
     >
@@ -59,4 +64,3 @@ export function AppProviders({ children }: { children: ReactNode }) {
     </PrivyProvider>
   );
 }
-
