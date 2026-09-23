@@ -1,0 +1,15 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.28"
+cbor_metadata = true
+bytecode_hash = "none"
+use_literal_content = true
+
+# Arc Mainnet
+eth-rpc-url = "https://rpc.mainnet.arc.io"
+chain_id = 5042
+
+# See more config options:
+# https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
