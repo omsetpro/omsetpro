@@ -282,7 +282,7 @@ export function AgreementLifecycleActions({
         {action === "fund" && (
           <dl className="funding-summary">
             <div>
-              <dt>Agreement amount / escrow</dt>
+              <dt>Security deposit / escrow</dt>
               <dd>{formatEther(agreement.depositAmount)} USDC</dd>
             </div>
             <div>

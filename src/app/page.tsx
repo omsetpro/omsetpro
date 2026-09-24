@@ -18,21 +18,21 @@ const steps = [
     icon: Handshake,
     title: "Structure the agreement",
     description:
-      "Record the asset, counterparties, collateral amount, deadlines, and neutral arbiter onchain.",
+      "Record the physical item, owner, renter / borrower, refundable security deposit, deadlines, and neutral arbiter onchain.",
   },
   {
     number: "02",
     icon: KeyRound,
     title: "Fund in native USDC",
     description:
-      "The borrower funds the escrow and protocol fee in one transaction on Arc Mainnet.",
+      "The renter / borrower funds the refundable security deposit and 1% protocol fee in one transaction on Arc Mainnet.",
   },
   {
     number: "03",
     icon: RotateCcw,
     title: "Settle with clarity",
     description:
-      "Return, refund, claim, and dispute paths distribute only the recorded collateral amount.",
+      "After handover, return, refund, damage or overdue claims, and disputes follow the recorded onchain lifecycle.",
   },
 ];
 
@@ -44,12 +44,12 @@ export default function Home() {
       <main>
         <section className="hero site-shell">
           <div className="hero-copy">
-            <p className="eyebrow">Physical-asset financing · Arc Mainnet</p>
-            <h1>Finance real assets with transparent USDC collateral.</h1>
+            <p className="eyebrow">Physical item lending · Arc Mainnet</p>
+            <h1>Borrow physical items with transparent USDC security deposits.</h1>
             <p className="hero-lede">
-              OmsetPro gives asset owners and borrowers a clear onchain agreement,
-              native-USDC escrow, defined deadlines, and deterministic settlement
-              rules—without asking either party to custody the other&apos;s collateral.
+              OmsetPro gives item owners and renters / borrowers a clear onchain
+              agreement with a refundable native-USDC security deposit, handover and
+              return deadlines, damage or overdue claims, and arbiter-led dispute resolution.
             </p>
             <div className="hero-actions">
               <Link className="button button-primary button-large" href="/dashboard">
@@ -69,27 +69,27 @@ export default function Home() {
             <div className="plain-language-note">
               <ShieldCheck aria-hidden="true" size={20} />
               <p>
-                Principal remains isolated from the 1% protocol fee, and every
-                lifecycle action is visible onchain.
+                The refundable security deposit remains separate from the 1% protocol
+                fee, and every lifecycle action is visible onchain.
               </p>
             </div>
           </div>
 
-          <div className="checkout-card" aria-label="How an OmsetPro financing agreement works">
+          <div className="checkout-card" aria-label="How an OmsetPro item lending agreement works">
             <div className="checkout-card-top">
               <span>OMSETPRO</span>
-              <span>FINANCING OVERVIEW</span>
+              <span>LENDING OVERVIEW</span>
             </div>
             <div className="checkout-title-row">
               <div>
                 <span className="field-label">Agreement type</span>
-                <strong>Physical asset</strong>
+                <strong>Physical item</strong>
               </div>
               <span className="checkout-stamp">PROTECTED</span>
             </div>
             <div className="checkout-lines">
               <div>
-                <span>Collateral</span>
+                <span>Security deposit</span>
                 <strong>Native USDC escrow</strong>
               </div>
               <div>
@@ -113,11 +113,11 @@ export default function Home() {
             <div className="section-heading">
               <div>
                 <p className="eyebrow">How OmsetPro works</p>
-                <h2 id="process-title">From asset terms to final settlement.</h2>
+                <h2 id="process-title">From item terms to final settlement.</h2>
               </div>
               <p>
-                Every participant can review the same funding and settlement
-                rules before the physical asset changes hands.
+                Every participant can review the same deposit, handover, return,
+                claim, and dispute rules before the physical item changes hands.
               </p>
             </div>
             <ol className="process-list">
@@ -160,7 +160,7 @@ export default function Home() {
       <footer className="site-footer">
         <div className="site-shell">
           <span>OmsetPro</span>
-          <span>Physical-asset financing with native USDC on Arc Mainnet.</span>
+          <span>Physical item lending with native USDC security deposits on Arc Mainnet.</span>
         </div>
       </footer>
     </div>

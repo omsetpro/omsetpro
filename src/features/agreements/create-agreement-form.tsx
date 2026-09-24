@@ -593,11 +593,11 @@ export function CreateAgreementForm() {
         <section className="agreement-form-sheet" aria-labelledby="create-title">
           <div className="form-heading">
             <div>
-              <p className="eyebrow">New asset financing record</p>
-              <h1 id="create-title">Structure an agreement</h1>
+              <p className="eyebrow">New item lending agreement</p>
+              <h1 id="create-title">Structure an item lending agreement</h1>
               <p>
-                Define the physical asset, counterparties, native-USDC collateral,
-                and settlement deadlines. Review everything before signing.
+                Define the physical item, participants, refundable native-USDC security
+                deposit, and lifecycle deadlines. Review everything before signing.
               </p>
             </div>
             <span className="form-step">01 / Create</span>
@@ -640,7 +640,7 @@ export function CreateAgreementForm() {
             <fieldset disabled={isPending}>
               <legend>Asset and participants</legend>
               <div className="form-field">
-                <label htmlFor="itemName">Physical asset</label>
+                <label htmlFor="itemName">Physical item</label>
                 <p id="itemName-help">Use a clear description both counterparties will recognize.</p>
                 <input
                   id="itemName"
@@ -670,8 +670,8 @@ export function CreateAgreementForm() {
               </div>
 
               <div className="form-field">
-                <label htmlFor="borrower">Borrower EVM address</label>
-                <p id="borrower-help">The wallet that will later fund the deposit.</p>
+                <label htmlFor="borrower">Renter / Borrower EVM address</label>
+                <p id="borrower-help">The wallet that will later fund the refundable security deposit.</p>
                 <input
                   id="borrower"
                   type="text"
@@ -705,10 +705,10 @@ export function CreateAgreementForm() {
             </fieldset>
 
             <fieldset disabled={isPending}>
-              <legend>Collateral and settlement timing</legend>
+              <legend>Security deposit and settlement timing</legend>
               <div className="form-field">
-                <label htmlFor="depositAmount">Agreement collateral</label>
-                <p id="depositAmount-help">Native USDC principal recorded now and funded by the borrower later.</p>
+                <label htmlFor="depositAmount">Security deposit</label>
+                <p id="depositAmount-help">Refundable native USDC recorded now and funded by the renter / borrower later. This is not a rental fee.</p>
                 <div className="input-suffix">
                   <input
                     id="depositAmount"
@@ -819,7 +819,7 @@ export function CreateAgreementForm() {
             <li><span>3</span><div><strong>Confirm</strong><p>Your wallet submits only after your explicit approval.</p></div></li>
           </ol>
           <div className="receipt-rule" />
-          <p className="receipt-note">No USDC is transferred during creation. The recorded borrower funds the collateral and protocol fee later from the live agreement.</p>
+          <p className="receipt-note">No USDC is transferred during creation. The recorded renter / borrower later funds the refundable security deposit plus the separate 1% protocol fee from the live agreement.</p>
         </aside>
       </div>
     </main>

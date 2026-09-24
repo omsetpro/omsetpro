@@ -39,7 +39,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           theme: "#0a0701",
           accentColor: "#2f6758",
           landingHeader: "Welcome to OmsetPro",
-          loginMessage: "Sign in to manage item loans and security deposits.",
+          loginMessage: "Sign in to manage item lending agreements and security deposits.",
           showWalletLoginFirst: false,
           walletChainType: "ethereum-only",
           walletList: [

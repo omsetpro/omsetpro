@@ -12,7 +12,7 @@ const OMSETPRO_ERROR_MESSAGES: Record<string, string> = {
   EmptyClaimEvidenceURI: "Enter a claim-evidence URI.",
   Unauthorized: "The connected wallet is not authorized for this agreement action.",
   InvalidStatus: "The agreement state changed and this action is no longer available.",
-  IncorrectDeposit: "The transaction value must exactly match the agreement amount plus the 1% OmsetPro fee.",
+  IncorrectDeposit: "The transaction value must exactly match the security deposit plus the 1% OmsetPro fee.",
   DeadlineExpired: "The contract action deadline has already been reached.",
   DeadlineNotReached: "The contract action deadline has not been reached yet.",
   InvalidClaimAmount: "The claim or owner award is outside the allowed deposit range.",

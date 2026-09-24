@@ -26,10 +26,10 @@ export function DashboardGate() {
             <ShieldCheck size={28} />
           </div>
           <p className="eyebrow">Dashboard access</p>
-          <h1 id="signin-title">Access your financing workspace.</h1>
+          <h1 id="signin-title">Access your item lending workspace.</h1>
           <p>
             Sign in to discover agreements tied to your wallet, monitor native-USDC
-            collateral, and complete authorized lifecycle actions.
+            security deposits, and complete authorized lifecycle actions.
           </p>
           <button className="button button-primary button-large" type="button" onClick={login}>
             <LogIn aria-hidden="true" size={18} />

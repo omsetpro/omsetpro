@@ -330,7 +330,7 @@ function AgreementRecord({
         <h2 id="roles-title">People on record</h2>
         <dl>
           <RoleRow label="Owner" address={agreement.owner} />
-          <RoleRow label="Borrower" address={agreement.borrower} />
+          <RoleRow label="Renter / Borrower" address={agreement.borrower} />
           <RoleRow label="Arbiter" address={agreement.arbiter} />
         </dl>
         <p className="receipt-note">Eligible lifecycle actions appear only for the connected owner, borrower, or arbiter and are checked against live contract state and chain time.</p>
